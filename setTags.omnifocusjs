@@ -1,0 +1,137 @@
+/*{
+  "type": "action",
+  "targets": ["omnifocus"],
+  "author": "Bruce Tian",
+  "identifier": "com.tianrunhe.setTags",
+  "version": "1.0",
+  "description": "Select and set tags for a Task",
+  "label": "Set Tags for Task",
+  "shortLabel": "Set Tags for Task",
+  "paletteLabel": "Set Tags for Task",
+  "image": "powerplug.fill"
+}*/
+(() => {
+  const action = new PlugIn.Action((selection, sender) => {
+    const task = selection.tasks[0]
+    const currentTags = task.tags
+
+    const energyMasterTag = flattenedTags.byName("⚡️Energy")
+    const currentEnergyTag = currentTags.filter(t => t.parent === energyMasterTag)[0]
+    const toolsMasterTag = flattenedTags.byName("⚙️Tools")
+    const currentToolsTags = currentTags.filter(t => t.parent === toolsMasterTag)
+    const locationMasterTag = flattenedTags.byName("📍Location")
+    const currentLocationTag = currentTags.filter(t => t.parent === locationMasterTag)[0]
+    const peopleMasterTag = flattenedTags.byName("👥People")
+    const currentPeopleTag = currentTags.filter(t => t.parent === peopleMasterTag)[0]
+    
+    const energyOptionMenu = new Form.Field.Option(
+      "energyOptionMenu",
+      energyMasterTag.name,
+      energyMasterTag.children,
+      energyMasterTag.children.map(t => t.name),
+      currentEnergyTag
+    )
+    const toolsOptionMenu = new Form.Field.MultipleOptions(
+      "toolsOptionMenu",
+      toolsMasterTag.name,
+      toolsMasterTag.children,
+      toolsMasterTag.children.map(t => t.name),
+      currentToolsTags
+    )
+    const locationOptionMenu = new Form.Field.Option(
+      "locationOptionMenu",
+      locationMasterTag.name,
+      [locationMasterTag, ...locationMasterTag.children],
+      ["❌ No specific location", ...locationMasterTag.children.map(t => t.name)],
+      currentLocationTag
+    )
+    const peopleOptionMenu = new Form.Field.Option(
+      "peopleOptionMenu",
+      peopleMasterTag.name,
+      [peopleMasterTag, ...peopleMasterTag.children],
+      ["❌ No specific people", ...peopleMasterTag.children.map(t => t.name)],
+      currentPeopleTag
+    )
+
+    const energyTagForm = new Form()
+    energyTagForm.addField(energyOptionMenu)
+    const energyTagFormPromise = energyTagForm.show(
+      "What energy level does this task require?",
+      "Continue")
+    energyTagForm.validate = (o) => o.values["energyOptionMenu"] !== undefined
+    
+    energyTagFormPromise.then((o) => {
+      task.removeTag(currentEnergyTag)
+      task.addTag(o.values["energyOptionMenu"])
+      
+      const toolsTagForm = new Form()
+      toolsTagForm.addField(toolsOptionMenu)
+      const toolsTagFormPromise = toolsTagForm.show(
+        "With what tools can this task be performed?",
+        "Continue")
+      toolsTagForm.validate = (o) => o.values["toolsOptionMenu"] !== undefined
+      toolsTagFormPromise.then((o) => {
+        task.removeTags(currentToolsTags)
+        task.addTags(o.values["toolsOptionMenu"])
+
+        const locationTagForm = new Form()
+        locationTagForm.addField(locationOptionMenu)
+        const locationTagFormPromise = locationTagForm.show(
+          "Is this task exclusive to a specific location?",
+          "Continue"
+        )
+        locationTagFormPromise.then((o) => {
+          if (currentLocationTag !== undefined) {
+            task.removeTag(currentLocationTag)
+          }
+          const selectedLocationTag = o.values["locationOptionMenu"]
+          if (selectedLocationTag !== locationMasterTag) {
+            task.addTag(selectedLocationTag)
+          }
+
+          const peopleTagForm = new Form()
+          peopleTagForm.addField(peopleOptionMenu)
+          const peopletagFormPromise = peopleTagForm.show(
+            "Does this task involve anyone?",
+            "Complete"
+          )
+          peopletagFormPromise.then((o) => {
+            if (currentPeopleTag !== undefined) {
+              task.removeTag(currentPeopleTag)
+            }
+            const selectedPeopleTag = o.values["peopleOptionMenu"]
+            if (selectedPeopleTag !== peopleMasterTag) {
+              task.addTag(selectedPeopleTag)
+            }
+          })
+          peopletagFormPromise.catch((e) => {
+            if (!err.causedByUserCancelling) {
+              console.error(err.name, err.message)
+            }
+          })
+        })
+        locationTagFormPromise.catch((e) => {
+          if (!err.causedByUserCancelling) {
+            console.error(err.name, err.message)
+          }
+        })
+      })
+      toolsTagFormPromise.catch((e) => {
+        if (!err.causedByUserCancelling) {
+          console.error(err.name, err.message)
+        }
+      })
+    })
+    energyTagFormPromise.catch((e) => {
+      if (!err.causedByUserCancelling) {
+        console.error(err.name, err.message)
+      }
+    })
+  });
+
+  action.validate = function(selection, sender){
+    return selection.tasks.length === 1
+  };
+  
+  return action;
+})();
