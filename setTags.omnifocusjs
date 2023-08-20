@@ -8,7 +8,7 @@
   "label": "Set Tags for Task",
   "shortLabel": "Set Tags for Task",
   "paletteLabel": "Set Tags for Task",
-  "image": "powerplug.fill"
+  "image": "tag.circle.fill"
 }*/
 (() => {
   const action = new PlugIn.Action((selection, sender) => {
