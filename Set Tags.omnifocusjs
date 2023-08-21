@@ -61,7 +61,9 @@
     energyTagForm.validate = (o) => o.values["energyOptionMenu"] !== undefined
     
     energyTagFormPromise.then((o) => {
-      task.removeTag(currentEnergyTag)
+      if (currentEnergyTag !== undefined) {
+        task.removeTag(currentEnergyTag)
+      }
       task.addTag(o.values["energyOptionMenu"])
       
       const toolsTagForm = new Form()
@@ -71,8 +73,12 @@
         "Continue")
       toolsTagForm.validate = (o) => o.values["toolsOptionMenu"] !== undefined
       toolsTagFormPromise.then((o) => {
-        task.removeTags(currentToolsTags)
-        task.addTags(o.values["toolsOptionMenu"])
+        if (currentToolsTags !== undefined && currentToolsTags.length > 0) {
+          task.removeTags(currentToolsTags)
+        }
+        if (o.values["toolsOptionMenu"] !== undefined && o.values["toolsOptionMenu"].length > 0) {
+          task.addTags(o.values["toolsOptionMenu"])
+        }
 
         const locationTagForm = new Form()
         locationTagForm.addField(locationOptionMenu)
@@ -84,10 +90,7 @@
           if (currentLocationTag !== undefined) {
             task.removeTag(currentLocationTag)
           }
-          const selectedLocationTag = o.values["locationOptionMenu"]
-          if (selectedLocationTag !== locationMasterTag) {
-            task.addTag(selectedLocationTag)
-          }
+          task.addTag(o.values["locationOptionMenu"])
 
           const peopleTagForm = new Form()
           peopleTagForm.addField(peopleOptionMenu)
@@ -99,10 +102,7 @@
             if (currentPeopleTag !== undefined) {
               task.removeTag(currentPeopleTag)
             }
-            const selectedPeopleTag = o.values["peopleOptionMenu"]
-            if (selectedPeopleTag !== peopleMasterTag) {
-              task.addTag(selectedPeopleTag)
-            }
+            task.addTag(o.values["peopleOptionMenu"])
           })
           peopletagFormPromise.catch((e) => {
             if (!err.causedByUserCancelling) {
