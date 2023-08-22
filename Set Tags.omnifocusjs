@@ -90,7 +90,10 @@
           if (currentLocationTag !== undefined) {
             task.removeTag(currentLocationTag)
           }
-          task.addTag(o.values["locationOptionMenu"])
+          const selectedLocationTag = o.values["locationOptionMenu"]
+          if (selectedLocationTag !== locationMasterTag) {
+            task.addTag(selectedLocationTag)
+          }
 
           const peopleTagForm = new Form()
           peopleTagForm.addField(peopleOptionMenu)
@@ -102,7 +105,10 @@
             if (currentPeopleTag !== undefined) {
               task.removeTag(currentPeopleTag)
             }
-            task.addTag(o.values["peopleOptionMenu"])
+            const selectedPeopleTag = o.values["peopleOptionMenu"]
+            if (selectedPeopleTag !== peopleMasterTag) {
+              task.addTag(selectedPeopleTag)
+            }
           })
           peopletagFormPromise.catch((e) => {
             if (!err.causedByUserCancelling) {
