@@ -1,0 +1,47 @@
+/*{
+  "type": "action",
+  "targets": ["omnifocus"],
+  "author": "Bruce Tian",
+  "identifier": "com.tianrunhe.setTimes",
+  "version": "1.0",
+  "description": "Set Estimated Duration, Defer Until and Due Date for a task",
+  "label": "Set Times for Task",
+  "shortLabel": "Set Times for Task",
+  "paletteLabel": "Set Times for Task",
+  "image": "clock.circle.fill"
+}*/
+(() => {
+  const action = new PlugIn.Action((selection, sender) => {
+    const task = selection.tasks[0]
+
+    const estimatedDurationOptions = [5, 15, 30, 60]
+    const currentEstimatedMinutes = task.estimatedMinutes
+    const estimatedDurationOptionMenu = new Form.Field.Option(
+      "estimatedDurationOptionMenu",
+      "Estimated Duration",
+      estimatedDurationOptions,
+      estimatedDurationOptions.map(e => `${e}m`),
+      currentEstimatedMinutes
+    )
+    const estimatedDurationForm = new Form()
+    estimatedDurationForm.addField(estimatedDurationOptionMenu)
+    const estimatedDurationFormPromise = estimatedDurationForm.show(
+      "What's your estimated time frame for completing this task?",
+      "Continue")
+    estimatedDurationForm.validate = (o) => o.values["estimatedDurationOptionMenu"] !== undefined
+    estimatedDurationFormPromise.then((o) => {
+      task.estimatedMinutes = o.values["estimatedDurationOptionMenu"]
+    })
+    estimatedDurationForm.catch((e) => {
+      if (!err.causedByUserCancelling) {
+        console.error(err.name, err.message)
+      }
+    })
+  });
+
+  action.validate = function(selection, sender){
+    return selection.tasks.length === 1
+  };
+  
+  return action;
+})();
