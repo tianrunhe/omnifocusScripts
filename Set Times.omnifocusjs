@@ -13,9 +13,18 @@
 (() => {
   const action = new PlugIn.Action((selection, sender) => {
     const task = selection.tasks[0]
+    const currentEstimatedMinutes = task.estimatedMinutes
+    const currentDeferDate = task.deferDate
+    const currentDueDate = task.dueDate
+
+    const form = new Form()
+    form.validate = (o) => {
+      return o.values["estimatedDurationOptionMenu"] !== undefined
+        && o.values["deferDateInput"] !== undefined
+        && o.values["dueDateInput"] !== undefined
+    }
 
     const estimatedDurationOptions = [5, 15, 30, 60]
-    const currentEstimatedMinutes = task.estimatedMinutes
     const estimatedDurationOptionMenu = new Form.Field.Option(
       "estimatedDurationOptionMenu",
       "Estimated Duration",
@@ -23,16 +32,31 @@
       estimatedDurationOptions.map(e => `${e}m`),
       currentEstimatedMinutes
     )
-    const estimatedDurationForm = new Form()
-    estimatedDurationForm.addField(estimatedDurationOptionMenu)
-    const estimatedDurationFormPromise = estimatedDurationForm.show(
-      "What's your estimated time frame for completing this task?",
-      "Continue")
-    estimatedDurationForm.validate = (o) => o.values["estimatedDurationOptionMenu"] !== undefined
-    estimatedDurationFormPromise.then((o) => {
+    form.addField(estimatedDurationOptionMenu)
+    
+    const deferDateInput = new Form.Field.Date(
+      "deferDateInput",
+      "Defer Date",
+      currentDeferDate
+    )
+    form.addField(deferDateInput)
+
+    const dueDateInput = new Form.Field.Date(
+      "dueDateInput",
+      "Due Date",
+      currentDueDate
+    )
+    form.addField(dueDateInput)
+    
+    const formPromise = form.show(
+      "Times for this task",
+      "Complete")
+    formPromise.then((o) => {
       task.estimatedMinutes = o.values["estimatedDurationOptionMenu"]
+      task.deferDate = o.values["deferDateInput"]
+      task.dueDate = o.values["dueDateInput"]
     })
-    estimatedDurationForm.catch((e) => {
+    formPromise.catch((e) => {
       if (!err.causedByUserCancelling) {
         console.error(err.name, err.message)
       }
