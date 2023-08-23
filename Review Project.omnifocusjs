@@ -1,0 +1,45 @@
+// COPY & PASTE into editor app. EDIT & SAVE with “.omnifocusjs” file extension.
+/*{
+  "type": "action",
+  "targets": ["omnifocus"],
+  "author": "Bruce Tian",
+  "identifier": "com.tianrunhe.reviewProject",
+  "version": "1.0",
+  "description": "Review a Project",
+  "label": "Review a Project",
+  "shortLabel": "Review a Project",
+  "paletteLabel": "Review a Project",
+  "image": "magnifyingglass.circle.fill"
+}*/
+(() => {
+  const action = new PlugIn.Action(async function(selection, sender){
+    try {
+      const project = selection.projects[0]
+      const allTasks = project.tasks
+      const availableTasks = allTasks.filter(
+        t => !t.completed && t.status !== Task.Status.Dropped
+      )
+      availableTasks.forEach((task) => {
+        if (task.hasChildren) {
+          const allSubTasks = task.tasks
+          const availableSubTasks = allSubTasks.filter(
+            t => !t.completed && t.status !== Task.Status.Dropped
+          )
+          console.log(`${task.name} is a sub-project. The first action to take is ${availableSubTasks[0].name}`)
+        } else {
+          console.log(`${task.name} is the next action.`)
+        }
+      })
+    } catch(err) {
+      if(!err.causedByUserCancelling) {
+        console.error(err.name, err.message)
+      }
+    }
+  });
+
+  action.validate = function(selection, sender){
+    return selection.projects.length === 1
+  };
+  
+  return action;
+})();
