@@ -11,8 +11,25 @@
   "paletteLabel": "Review a Project",
   "image": "magnifyingglass.circle.fill"
 }*/
+const performPlugInAction = (pluginID, actionName) => {
+  plugin = PlugIn.find(pluginID)
+  if (plugin === null) {
+    throw new Error("Plug-in not installed.")
+  }
+  actionNames = plugin.actions.map(action => action.name)
+  if (actionNames.indexOf(actionName) === -1) {
+    throw new Error(`Action "${actionName}" is not in the plug-in.`)
+  } else {
+    if (plugin.action(actionName).validate()) {
+      plugin.action(actionName).perform()
+    } else {
+      throw new Error(`The action "${actionName}" is not validated to execute.`)
+    }
+  }
+}
 (() => {
-  const action = new PlugIn.Action(async function(selection, sender){
+  const action = new PlugIn.Action(async function(selection, sender) {
+    
     try {
       const project = selection.projects[0]
       const allTasks = project.tasks
@@ -27,7 +44,25 @@
           )
           console.log(`${task.name} is a sub-project. The first action to take is ${availableSubTasks[0].name}`)
         } else {
-          console.log(`${task.name} is the next action.`)
+          const isNextActionForm = new Form()
+          const isNextActionMenu = new Form.Field.Option(
+            "isNextActionMenu",
+            'actionable? ',
+            [true, false],
+            ['Yes', 'No'],
+            null
+          )
+          isNextActionForm.addField(new Form.Field.String(
+            "textInput",
+            "Task",
+            task.name
+          ))
+          isNextActionForm.addField(isNextActionMenu)
+          const isNextActionFormPromise = isNextActionForm.show(`Next task?`, "Continue")
+          isNextActionForm.validate= (o) => o.values["isNextActionMenu"] !== undefined
+          isNextActionFormPromise.then((o) => {
+            performPlugInAction("com.tianrunhe.setTags", "Set Tags")
+          })
         }
       })
     } catch(err) {
