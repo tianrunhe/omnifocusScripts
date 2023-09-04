@@ -20,8 +20,6 @@
     const form = new Form()
     form.validate = (o) => {
       return o.values["estimatedDurationOptionMenu"] !== undefined
-        && o.values["deferDateInput"] !== undefined
-        && o.values["dueDateInput"] !== undefined
     }
 
     const estimatedDurationOptions = [5, 15, 30, 60]
